@@ -1,12 +1,29 @@
 from django.contrib import admin
 
+from import_export import resources, fields
+from import_export.admin import (
+    ImportExportModelAdmin,
+    ImportExportActionModelAdmin,
+)
+
 # Register your models here.
+from import_export.widgets import ForeignKeyWidget
 
 from .models import Member, Web, Game, Bundle, GameKey
 
 
+class MemberResource(resources.ModelResource):
+    class Meta:
+        model = Member
+        skip_unchanged = True
+        report_skipped = False
+
+
 @admin.register(Member)
-class MemberAdmin(admin.ModelAdmin):
+class MemberAdmin(ImportExportModelAdmin,
+                  ImportExportActionModelAdmin,
+                  admin.ModelAdmin):
+    resource_class = MemberResource
     list_display = (
         'name',
     )
@@ -15,8 +32,18 @@ class MemberAdmin(admin.ModelAdmin):
     )
 
 
+class WebResource(resources.ModelResource):
+    class Meta:
+        model = Web
+        skip_unchanged = True
+        report_skipped = False
+
+
 @admin.register(Web)
-class WebAdmin(admin.ModelAdmin):
+class WebAdmin(ImportExportModelAdmin,
+               ImportExportActionModelAdmin,
+               admin.ModelAdmin):
+    resource_class = WebResource
     list_display = (
         'name', 'access_key',
     )
@@ -25,8 +52,18 @@ class WebAdmin(admin.ModelAdmin):
     )
 
 
+class GameResource(resources.ModelResource):
+    class Meta:
+        model = Game
+        skip_unchanged = True
+        report_skipped = False
+
+
 @admin.register(Game)
-class GameAdmin(admin.ModelAdmin):
+class GameAdmin(ImportExportModelAdmin,
+                ImportExportActionModelAdmin,
+                admin.ModelAdmin):
+    resource_class = GameResource
     list_display = (
         'name', 'company',
     )
@@ -36,8 +73,18 @@ class GameAdmin(admin.ModelAdmin):
     )
 
 
+class BundleResource(resources.ModelResource):
+    class Meta:
+        model = Bundle
+        skip_unchanged = True
+        report_skipped = False
+
+
 @admin.register(Bundle)
-class BundleAdmin(admin.ModelAdmin):
+class BundleAdmin(ImportExportModelAdmin,
+                  ImportExportActionModelAdmin,
+                  admin.ModelAdmin):
+    resource_class = BundleResource
     list_display = (
         'name',
     )
@@ -46,8 +93,45 @@ class BundleAdmin(admin.ModelAdmin):
     )
 
 
+class GameKeyResource(resources.ModelResource):
+    game = fields.Field(
+        column_name='game',
+        attribute='game',
+        widget=ForeignKeyWidget(Game, 'name'))
+
+    buyer = fields.Field(
+        column_name='buyer',
+        attribute='buyer',
+        widget=ForeignKeyWidget(Member, 'name'))
+
+    sell_web = fields.Field(
+        column_name='sell_web',
+        attribute='sell_web',
+        widget=ForeignKeyWidget(Web, 'name'))
+
+    class Meta:
+        model = GameKey
+        skip_unchanged = True
+        report_skipped = False
+        fields = (
+            'id',
+            'game',
+            'key',
+            'buyer',
+            'buy_date',
+            'buy_price',
+            'minimum_sell_price',
+            'sell_date',
+            'sell_price',
+            'sell_web',
+        )
+
+
 @admin.register(GameKey)
-class GameKeyAdmin(admin.ModelAdmin):
+class GameKeyAdmin(ImportExportModelAdmin,
+                   ImportExportActionModelAdmin,
+                   admin.ModelAdmin):
+    resource_class = GameKeyResource
     list_display = (
         'game',
         'key',
@@ -59,7 +143,7 @@ class GameKeyAdmin(admin.ModelAdmin):
         'sell_price',
         'sell_web',
     )
-    readonly_fields = ('profit', 'profit_pct', )
+    readonly_fields = ('profit', 'profit_pct',)
     search_fields = (
         'game__name',
         'buyer__name'
